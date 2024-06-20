@@ -7,7 +7,7 @@ function handlePageLoad() {
     let urls = JSON.parse(element.dataset.urls); // Parse the urls
     let width = element.dataset.width; // Get the width
     let height = element.dataset.height; // Get the height
-
+    alert(images);
     // Combine the images, alt texts, and URLs into a single array of objects
     let items = images.map((image, index) => {
       return {
