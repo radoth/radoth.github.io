@@ -80,35 +80,11 @@ const metaImage = image ? await getImage({
         <h1 class="prose prose-slate uppercase font-overpass-mono text-[rgb(245,245,245)] text-4xl">
           {title}
         </h1>
-        <div class="flex gap-2 mt-2">
-          {frontmatter.tags.map((tag) => (
-            <p class="font-overpass-mono text-xl">
-              <a
-                class="bg-slate-600 text-[rgb(245,245,245)] bg-opacity-50 px-2 py-1 rounded"
-                href={`../tags/${tag}`}
-              >
-                {tag}
-              </a>
-            </p>
-          ))}
-        </div>
       </div>
     ) : (
       <div data-pagefind-body>
         <Prose>
         <h1 class="normal-case font-overpass-mono text-4xl -mb-1 mt-4">{title}</h1>
-        <div class="flex">
-          {frontmatter.tags.map((tag) => (
-            <p class="font-overpass-mono text-xl">
-              <a
-                class="bg-slate-600 text-[rgb(245,245,245)] bg-opacity-50 px-2 py-1 rounded no-underline"
-                href={`../tags/${tag}`}
-              >
-                {tag}
-              </a>
-            </p>
-          ))}
-        </div>
       </Prose>
       </div>
     )
