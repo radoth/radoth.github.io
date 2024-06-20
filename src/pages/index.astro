@@ -10,7 +10,7 @@ let allUrls = [];
 
 for (let collection of collections) {
   const allContent = await getCollection(collection);
-  const postsWithImages = allContent.filter(post => post.data.image?.src && post.data.image?.alt);
+  const postsWithImages = allContent.filter(post => post.data.image?.src && post.data.image?.alt || (post.data.subimage && post.data.subimage.length > 0));
 
   const imagePromises = postsWithImages.map(async post => {
     let images = [];
@@ -61,4 +61,4 @@ for (let collection of collections) {
   });
 }
 
-{allImages.length > 0 ? <Homepage title={pageTitle} images={JSON.stringify(allImages)} alt={JSON.stringify(allAlts)} urls={JSON.stringify(allUrls)}  width="1920" height="1080" /> : <p>No images found</p>}
+{allImages.length > 0 ? <Homepage title={pageTitle} images={JSON.stringify(allImages)} alt={JSON.stringify(allAlts)} urls={JSON.stringify(allUrls)} width="1920" height="1080" /> : <p>No images found</p>}
