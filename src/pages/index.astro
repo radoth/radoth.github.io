@@ -1,3 +1,4 @@
+// Import utilities from astro
 import Homepage from "../components/Homepage.astro";
 const { pageTitle } = Astro.props;
 import { getCollection } from "astro";
@@ -10,55 +11,51 @@ let allUrls = [];
 
 for (let collection of collections) {
   const allContent = await getCollection(collection);
-  const postsWithImages = allContent.filter(post => post.data.image?.src && post.data.image?.alt || (post.data.subimage && post.data.subimage.length > 0));
-
-  const imagePromises = postsWithImages.map(async post => {
+  
+  // Collect all image and subimage data
+  const postsWithImages = allContent.flatMap(post => {
     let images = [];
-
-    if (post.data.image) {
-      images.push({
-        src: post.data.image.src,
-        alt: post.data.image.alt,
-        url: `/${collection}/${post.slug}`
+    if (post.data.image?.src && post.data.image?.alt) {
+      images.push({ 
+        src: post.data.image.src, 
+        alt: post.data.image.alt, 
+        url: `/${collection}/${post.slug}` 
       });
     }
-
-    if (post.data.subimage && Array.isArray(post.data.subimage)) {
-      images = images.concat(post.data.subimage.map(sub => ({
-        src: sub.src,
-        alt: sub.alt,
+    if (post.data.subimage) {
+      images.push(...post.data.subimage.map(subimg => ({
+        src: subimg.src,
+        alt: subimg.alt,
         url: `/${collection}/${post.slug}`
       })));
     }
+    return images;
+  });
 
-    const imageAssets = await Promise.all(images.map(async image => {
-      const imageAsset = await getImage({
-        src: image.src,
-        alt: image.alt,
-        width: "1920",
-        height: "1080",
-        decoding: "async",
-        format: "avif",
-        quality: "65"
-      });
+  // Process all images
+  const imagePromises = postsWithImages.map(async img => {
+    const imageAsset = await getImage({
+      src: img.src,
+      alt: img.alt,
+      width: "1920",
+      height: "1080",
+      decoding: "async",
+      format: "avif",
+      quality: "65"
+    });
 
-      return {
-        imageSrc: imageAsset ? imageAsset.src : null,
-        alt: image.alt,
-        url: image.url
-      };
-    }));
-
-    return imageAssets.filter(result => result.imageSrc);
+    return {
+      imageSrc: imageAsset ? imageAsset.src : null,
+      alt: img.alt,
+      url: img.url
+    };
   });
 
   const results = await Promise.all(imagePromises);
 
-  results.forEach(resultArray => {
-    allImages.push(...resultArray.map(result => result.imageSrc));
-    allAlts.push(...resultArray.map(result => result.alt));
-    allUrls.push(...resultArray.map(result => result.url));
-  });
+  allImages.push(...results.map(result => result.imageSrc));
+  allAlts.push(...results.map(result => result.alt));
+  allUrls.push(...results.map(result => result.url));
 }
 
 {allImages.length > 0 ? <Homepage title={pageTitle} images={JSON.stringify(allImages)} alt={JSON.stringify(allAlts)} urls={JSON.stringify(allUrls)} width="1920" height="1080" /> : <p>No images found</p>}
