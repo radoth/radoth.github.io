@@ -5,9 +5,9 @@ function handlePageLoad() {
     return; // Exit the function if no #randomimage elements are found
   }
   imageElements.forEach((element) => {
-   
-    let images = JSON.parse(element.dataset.images);
     let subimages = JSON.parse(element.dataset.subimages);
+    let images = JSON.parse(element.dataset.images+element.dataset.subimages);
+    
     console.log(subimages)
     let alt = JSON.parse(element.dataset.alt); // Parse the alt texts
     let width = element.dataset.width; // Get the width
