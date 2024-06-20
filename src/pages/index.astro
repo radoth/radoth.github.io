@@ -1,48 +1,40 @@
----
-import { getCollection } from "astro:content";
-import { getImage } from 'astro:assets';
 import Homepage from "../components/Homepage.astro";
-
+const { pageTitle } = Astro.props;
+import { getCollection } from "astro";
 const collections = ['long_form', 'short_form', 'muses', 'zeitweilig'];
+import { getImage } from 'astro'; // Add all your collections here
 
-async function getRandomImages() {
-  let allImages = [];
-  let allAlts = [];
-  let allUrls = [];
+let allImages = [];
+let allAlts = [];
+let allUrls = [];
 
-  for (let collection of collections) {
-    const allContent = await getCollection(collection);
+for (let collection of collections) {
+  const allContent = await getCollection(collection);
+  const postsWithImages = allContent.filter(post => post.data.image?.src && post.data.image?.alt);
 
-    // Filter posts with images and subimages
-    const postsWithImages = allContent.filter(post =>
-      (post.data.image?.src && post.data.image?.alt) ||
-      (post.data.subimage && post.data.subimage.length > 0)
-    );
+  const imagePromises = postsWithImages.map(async post => {
+    let images = [];
 
-    const imagePromises = postsWithImages.map(async post => {
-      let images = [];
+    if (post.data.image) {
+      images.push({
+        src: post.data.image.src,
+        alt: post.data.image.alt,
+        url: `/${collection}/${post.slug}`
+      });
+    }
 
-      // Add main image if exists
-      if (post.data.image?.src && post.data.image?.alt) {
-        images.push({
-          src: post.data.image.src,
-          alt: post.data.image.alt,
-          positionx: post.data.image.positionx,
-          positiony: post.data.image.positiony
-        });
-      }
+    if (post.data.subimage && Array.isArray(post.data.subimage)) {
+      images = images.concat(post.data.subimage.map(sub => ({
+        src: sub.src,
+        alt: sub.alt,
+        url: `/${collection}/${post.slug}`
+      })));
+    }
 
-      // Add subimages if exist
-      if (post.data.subimage && post.data.subimage.length > 0) {
-        images.push(...post.data.subimage);
-      }
-
-      // Randomly select an image from the images array
-      const randomImage = images[Math.floor(Math.random() * images.length)];
-
+    const imageAssets = await Promise.all(images.map(async image => {
       const imageAsset = await getImage({
-        src: randomImage.src,
-        alt: randomImage.alt,
+        src: image.src,
+        alt: image.alt,
         width: "1920",
         height: "1080",
         decoding: "async",
@@ -52,33 +44,21 @@ async function getRandomImages() {
 
       return {
         imageSrc: imageAsset ? imageAsset.src : null,
-        alt: randomImage.alt,
-        url: `/${collection}/${post.slug}`
+        alt: image.alt,
+        url: image.url
       };
-    });
+    }));
 
-    const results = await Promise.all(imagePromises);
+    return imageAssets.filter(result => result.imageSrc);
+  });
 
-    allImages.push(...results.map(result => result.imageSrc));
-    allAlts.push(...results.map(result => result.alt));
-    allUrls.push(...results.map(result => result.url));
-  }
+  const results = await Promise.all(imagePromises);
 
-  return { allImages, allAlts, allUrls };
+  results.forEach(resultArray => {
+    allImages.push(...resultArray.map(result => result.imageSrc));
+    allAlts.push(...resultArray.map(result => result.alt));
+    allUrls.push(...resultArray.map(result => result.url));
+  });
 }
 
-const { allImages, allAlts, allUrls } = await getRandomImages();
----
-
-{allImages.length > 0 ? (
-  <Homepage 
-    title={Astro.props.pageTitle} 
-    images={JSON.stringify(allImages)} 
-    alt={JSON.stringify(allAlts)} 
-    urls={JSON.stringify(allUrls)} 
-    width="1920" 
-    height="1080" 
-  />
-) : (
-  <p>No images found</p>
-)}
+{allImages.length > 0 ? <Homepage title={pageTitle} images={JSON.stringify(allImages)} alt={JSON.stringify(allAlts)} urls={JSON.stringify(allUrls)}  width="1920" height="1080" /> : <p>No images found</p>}
