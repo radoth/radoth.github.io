@@ -15,6 +15,7 @@ const muses = defineCollection({
       positionx: z.string().optional(),
       positiony: z.string().optional()
     }).optional(),
+    subimage=z.array(z.string()).optional(),
     pubDate: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
   }),
